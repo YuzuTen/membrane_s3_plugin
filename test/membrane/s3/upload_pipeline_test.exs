@@ -16,7 +16,7 @@ defmodule Membrane.S3.UploadPipelineTest do
       destination: %Membrane.S3.Sink{
         bucket: "membrane-s3-plugin-test-bucket-us-east-1",
         path: "example.txt",
-        ex_aws: ExAws,
+        ex_aws: ExAws
       }
     ]
 
