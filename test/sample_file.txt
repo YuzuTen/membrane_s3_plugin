@@ -1,0 +1,2 @@
+This is an example file used for pipeline testing (at least until I get a stream alternative working)
+
