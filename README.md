@@ -79,6 +79,10 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 
 The documentation is also published on [HexDocs](https://hexdocs.pm/membrane_s3_plugin).
 
+## Changelog
+
+Release history is in the project [Changelog](https://github.com/YuzuTen/membrane_s3_plugin/blob/main/CHANGELOG.md).
+
 ## Copyright and License
 
 © 2022 YuzuTen LLC. Licensed under the [Apache license](LICENSE).

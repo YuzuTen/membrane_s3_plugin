@@ -74,6 +74,7 @@ defmodule Membrane.S3.Plugin.MixProject do
       {:hackney, ">= 0.0.0", only: [:dev, :test]},
       {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:sweet_xml, ">= 0.0.0", optional: true},
+      # These plugins are used by tests. They're only needed in your project if they make sense for your application.
       {:membrane_file_plugin, "~> 0.12.0", only: [:dev, :test]},
     ]
   end
