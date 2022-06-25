@@ -111,11 +111,18 @@ defmodule Membrane.S3.Sink do
           ex_aws: ex_aws
         } = state
       ) do
-    ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts))
-    |> ex_aws.request!(aws_config)
+    response =
+      ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts))
+      |> ex_aws.request(aws_config)
 
-    Membrane.Logger.info("Stopped")
-    {:ok, %{state | upload_id: nil, upload_index: 1, parts: []}}
+    case response do
+      {:ok, _response} ->
+        Membrane.Logger.info("Stopped")
+        {:ok, %{state | upload_id: nil, upload_index: 1, parts: []}}
+
+      error ->
+        {error, state}
+    end
   end
 
   @impl true
@@ -134,25 +141,37 @@ defmodule Membrane.S3.Sink do
           parts: parts
         } = state
       ) do
-    %{headers: headers} =
-      ExAws.S3.upload_part(
-        bucket,
-        path,
-        upload_id,
-        upload_index,
-        payload,
-        s3_opts
-      )
-      |> ex_aws.request!(aws_config)
+    with {:ok, %{headers: headers}} <-
+           ExAws.S3.upload_part(
+             bucket,
+             path,
+             upload_id,
+             upload_index,
+             payload,
+             s3_opts
+           )
+           |> ex_aws.request(aws_config),
+         {:ok, etag} <- find_etag(headers) do
+      parts = [{upload_index, etag} | parts]
 
-    # Maybe I should be a bit more defensive here?
-    {_, etag} =
-      headers
-      |> Enum.find(headers, fn {key, _} -> String.equivalent?(String.downcase(key), "etag") end)
+      {
+        {:ok, demand: {:input, state.chunk_size}},
+        %{state | upload_index: upload_index + 1, parts: parts}
+      }
+    else
+      {:error, context} -> {:error, context, state}
+    end
+  end
 
-    parts = [{upload_index, String.trim(etag, "\"")} | parts]
-
-    {{:ok, demand: {:input, state.chunk_size}},
-     %{state | upload_index: upload_index + 1, parts: parts}}
+  defp find_etag(headers) do
+    headers
+    |> Enum.find_value(
+      {:error, :invalid_etag},
+      fn {key, value} ->
+        if String.equivalent?(String.downcase(key), "etag") do
+          {:ok, String.trim(value, "\"")}
+        end
+      end
+    )
   end
 end

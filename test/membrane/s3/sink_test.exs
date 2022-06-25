@@ -40,7 +40,7 @@ defmodule ExAws.HappyPath do
 end
 
 defmodule Membrane.S3.SinkTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Membrane.S3.Sink
 
