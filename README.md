@@ -1,6 +1,6 @@
 # Membrane S3 Plugin
 
-This plugin provides a membrane Sink that writes to Amazon S3, or other object stores that use the AWS S3 API.
+This plugin provides a Membrane Sink that writes to Amazon S3, or other object stores that use the AWS S3 API.
 It will eventually also provide a membrane Source that reads from S3, but my current project doesn't need it yet.
 
 It is designed to work with the [Membrane Multimedia Framework](https://www.membraneframework.org/).
@@ -12,7 +12,7 @@ The package can be installed by adding `membrane_s3_plugin` to your list of depe
 ```elixir
 def deps do
   [
-    {:membrane_s3_plugin, "~> 0.0.1"}
+    {:membrane_s3_plugin, "~> 0.1.0"}
   ]
 end
 ```
@@ -24,7 +24,7 @@ is [hackney](https://hexdocs.pm/hackney/).
 
 If you are content with hackney as your http client, add `{:hackney, "~> 1.18"}` to your list of dependencies
 in `mix.exs`. For other http
-clients, you may override the :ex_aws, :http_client configuration to point to a module that implements the
+clients, you may override the `:ex_aws, :http_client` configuration to point to a module that implements the
 [`ExAws.Request.HttpClient`](https://hexdocs.pm/ex_aws/ExAws.Request.HttpClient.html) behavior.
 
 Because this library does no transcoding or packaging, no non-BEAM dependencies are required.
@@ -71,8 +71,10 @@ For additional configuration options, including alternate mechanisms, view the d
 
 1. Fork the [repository](https://github.com/YuzuTen/membrane_s3_plugin).
 2. Clone the fork.
-3. Make your changes and commit them. Add tests, please!
-4. Create a [pull request](https://github.com/YuzuTen/membrane_s3_plugin/pulls).
+3. Make your changes.
+4. Make sure to run `mix format`, `mix credo` and `mix dialyzer` and fix any issues that crop up.
+5. Commit your changes. Add tests, please!
+6. Create a [pull request](https://github.com/YuzuTen/membrane_s3_plugin/pulls).
 
 ## Documentation
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc).
