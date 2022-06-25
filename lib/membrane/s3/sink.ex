@@ -13,7 +13,7 @@ defmodule Membrane.S3.Sink do
   def_options(
     path: [
       spec: String.t(),
-      description: "Path of the output file"
+      description: "The path within your S3 bucket where you'd like to store the resource"
     ],
     bucket: [
       spec: String.t(),
@@ -37,7 +37,7 @@ defmodule Membrane.S3.Sink do
     ],
     ex_aws: [
       spec: atom(),
-      description: "AWS client",
+      description: "AWS client. Only needed when substituting the default ExAws dependency.",
       default: ExAws
     ]
   )
