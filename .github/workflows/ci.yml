@@ -33,7 +33,5 @@ jobs:
       - run: mix credo
       - name: Run Dialyzer
         run: mix dialyzer
-        if: matrix.elixir == '1.12' # Only check dialyzer with the latest version
-
       - name: Install mix deps
         run: mix deps.get

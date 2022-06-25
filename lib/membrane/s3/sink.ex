@@ -1,8 +1,6 @@
 defmodule Membrane.S3.Sink do
   @moduledoc """
-    The final stage in an S3 upload pipeline. While it is possible to use this endpoint directly, it is recommended
-    that you use the `Membrane.S3.Sink` instead, which accumulates buffers and forwards them to this element
-    once the combined buffer length reaches the appropriate chunk_size.
+    Uploads items to an S3 Bucket.
   """
   use Membrane.Sink
 

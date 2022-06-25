@@ -1,7 +1,7 @@
 defmodule Membrane.S3.Plugin.MixProject do
   use Mix.Project
 
-  @version "0.0.1"
+  @version "0.1.0"
   @github_url "https://github.com/YuzuTen/membrane_s3_plugin"
 
   def project do
@@ -76,8 +76,8 @@ defmodule Membrane.S3.Plugin.MixProject do
       {:sweet_xml, ">= 0.0.0", optional: true},
       # These plugins are used by tests. They're only needed in your project if they make sense for your application.
       {:membrane_file_plugin, "~> 0.12.0", only: [:dev, :test]},
-      {:mox, "~> 1.0", only: [:dev, :test]},
-      # Thse dependencies are for
+      {:mox, "~> 1.0", only: [:test]},
+      # These dependencies support static analysis of the codebase.
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
