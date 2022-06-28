@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - run: mix deps.get
       - run: mix format --check-formatted
-        if: matrix.elixir == '1.12' # Only check formatting with the latest version
+        if: matrix.elixir == '1.13.4' # Only check formatting with the latest version
       - run: mix compile --warnings-as-errors
       - run: mix test
       - run: mix credo
