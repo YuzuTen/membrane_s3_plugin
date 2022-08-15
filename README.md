@@ -12,7 +12,7 @@ The package can be installed by adding `membrane_s3_plugin` to your list of depe
 ```elixir
 def deps do
   [
-    {:membrane_s3_plugin, "~> 0.1.0"}
+    {:membrane_s3_plugin, "~> 0.1.1"}
   ]
 end
 ```

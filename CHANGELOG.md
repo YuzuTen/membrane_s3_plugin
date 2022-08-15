@@ -10,3 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial Membrane S3 Sink implementation
 - CI process including mix credo, mix format, and dialyzer
+
+## [0.1.1] - 2022-08-15
+### Added
+- Moved AWS call to complete the stream to handle_end_of_stream/3 so that files will upload even if the pipeline isn't
+explicitly stopped. Allows this plugin to be more friendly with dynamic pipelines.
