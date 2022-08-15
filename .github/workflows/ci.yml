@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        otp: ["24.3.4.1", "25.0.2"]
+        otp: ["24.3.4.1", "25.0.3"]
         elixir: ["1.13.4"]
     steps:
       - uses: actions/checkout@v2
