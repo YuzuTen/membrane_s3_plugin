@@ -59,7 +59,8 @@ defmodule Membrane.S3.Sink do
         ex_aws: ex_aws,
         upload_id: nil,
         upload_index: 1,
-        parts: []
+        parts: [],
+        completed: false
       }
     }
   end
@@ -98,29 +99,13 @@ defmodule Membrane.S3.Sink do
   end
 
   @impl true
-  def handle_prepared_to_stopped(
-        _ctx,
-        %{
-          bucket: bucket,
-          upload_id: upload_id,
-          path: path,
-          parts: parts,
-          aws_config: aws_config,
-          ex_aws: ex_aws
-        } = state
-      ) do
-    response =
-      ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts))
-      |> ex_aws.request(aws_config)
+  def handle_playing_to_prepared(_ctx, state) do
+    complete_upload(state)
+  end
 
-    case response do
-      {:ok, _response} ->
-        Membrane.Logger.info("Stopped")
-        {:ok, %{state | upload_id: nil, upload_index: 1, parts: []}}
-
-      error ->
-        {error, state}
-    end
+  @impl true
+  def handle_end_of_stream(_pad, _ctx, state) do
+    complete_upload(state)
   end
 
   @impl true
@@ -171,5 +156,31 @@ defmodule Membrane.S3.Sink do
         end
       end
     )
+  end
+
+  defp complete_upload(%{completed: true} = state), do: {:ok, state}
+
+  defp complete_upload(
+         %{
+           bucket: bucket,
+           path: path,
+           upload_id: upload_id,
+           parts: parts,
+           ex_aws: ex_aws,
+           aws_config: aws_config
+         } = state
+       ) do
+    response =
+      ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts))
+      |> ex_aws.request(aws_config)
+
+    case response do
+      {:ok, _response} ->
+        Membrane.Logger.info("Upload complete")
+        {:ok, %{state | upload_id: nil, upload_index: 1, parts: [], completed: true}}
+
+      error ->
+        {error, state}
+    end
   end
 end
