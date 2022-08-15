@@ -176,7 +176,7 @@ defmodule Membrane.S3.Sink do
 
     case response do
       {:ok, _response} ->
-        Membrane.Logger.info("Stopped")
+        Membrane.Logger.info("Upload complete")
         {:ok, %{state | upload_id: nil, upload_index: 1, parts: [], completed: true}}
 
       error ->
