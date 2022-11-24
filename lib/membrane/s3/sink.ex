@@ -19,8 +19,9 @@ defmodule Membrane.S3.Sink do
     ],
     chunk_size: [
       spec: integer(),
-      description:
-        "Chunk size in bytes. Determines how many bytes are written to S3 in one request",
+      description: """
+              Chunk size in bytes. Determines how many bytes are written to S3 in one request. AWS requires this to be at least 5MB
+      """,
       default: 5 * 1_024 * 1_024
     ],
     s3_opts: [
@@ -60,7 +61,9 @@ defmodule Membrane.S3.Sink do
         upload_id: nil,
         upload_index: 1,
         parts: [],
-        completed: false
+        completed: false,
+        current_chunk: [],
+        current_chunk_size: 0
       }
     }
   end
@@ -95,6 +98,7 @@ defmodule Membrane.S3.Sink do
         state
       ) do
     Membrane.Logger.info("Start Playing")
+
     {{:ok, demand: {:input, state.chunk_size}}, state}
   end
 
@@ -114,16 +118,53 @@ defmodule Membrane.S3.Sink do
         %Membrane.Buffer{payload: payload},
         _ctx,
         %{
-          s3_opts: s3_opts,
-          aws_config: aws_config,
-          bucket: bucket,
-          path: path,
-          upload_id: upload_id,
-          ex_aws: ex_aws,
-          upload_index: upload_index,
-          parts: parts
+          chunk_size: chunk_size,
+          current_chunk: current_chunk,
+          current_chunk_size: current_chunk_size
         } = state
       ) do
+    current_chunk = [payload | current_chunk]
+    current_chunk_size = current_chunk_size + byte_size(payload)
+
+    if current_chunk_size >= chunk_size do
+      <<payload::binary-size(chunk_size), rest::binary>> =
+        Enum.reverse(current_chunk) |> Enum.join()
+
+      case upload_chunk(payload, %{
+             state
+             | current_chunk: [rest],
+               current_chunk_size: byte_size(rest)
+           }) do
+        {:ok, parts, count} ->
+          {
+            {:ok, demand: {:input, state.chunk_size}},
+            %{state | upload_index: count, parts: parts}
+          }
+
+        {:error, context} ->
+          {:error, context, state}
+      end
+    else
+      {
+        {:ok, demand: {:input, chunk_size}},
+        %{state | current_chunk: current_chunk, current_chunk_size: current_chunk_size}
+      }
+    end
+  end
+
+  defp upload_chunk(
+         payload,
+         %{
+           s3_opts: s3_opts,
+           aws_config: aws_config,
+           bucket: bucket,
+           path: path,
+           upload_id: upload_id,
+           ex_aws: ex_aws,
+           upload_index: upload_index,
+           parts: parts
+         }
+       ) do
     with {:ok, %{headers: headers}} <-
            ExAws.S3.upload_part(
              bucket,
@@ -136,13 +177,12 @@ defmodule Membrane.S3.Sink do
            |> ex_aws.request(aws_config),
          {:ok, etag} <- find_etag(headers) do
       parts = [{upload_index, etag} | parts]
-
-      {
-        {:ok, demand: {:input, state.chunk_size}},
-        %{state | upload_index: upload_index + 1, parts: parts}
-      }
+      Membrane.Logger.info("Uploaded part #{etag} to s3")
+      {:ok, parts, upload_index + 1}
     else
-      {:error, context} -> {:error, context, state}
+      error ->
+        Membrane.Logger.error("Failed to upload part to S3. #{inspect(error)}")
+        error
     end
   end
 
@@ -165,20 +205,21 @@ defmodule Membrane.S3.Sink do
            bucket: bucket,
            path: path,
            upload_id: upload_id,
-           parts: parts,
            ex_aws: ex_aws,
-           aws_config: aws_config
+           aws_config: aws_config,
+           current_chunk: current_chunk
          } = state
        ) do
-    response =
-      ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts))
-      |> ex_aws.request(aws_config)
+    final_chunk = Enum.reverse(current_chunk) |> Enum.join()
 
-    case response do
-      {:ok, _response} ->
-        Membrane.Logger.info("Upload complete")
-        {:ok, %{state | upload_id: nil, upload_index: 1, parts: [], completed: true}}
-
+    with {:ok, parts, _} <-
+           upload_chunk(final_chunk, %{state | current_chunk: [], current_chunk_size: 0}),
+         request <-
+           ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts)),
+         {:ok, response} <- ex_aws.request(request, aws_config) do
+      Membrane.Logger.info("Upload complete for #{length(parts)} parts. #{inspect(response)}")
+      {:ok, %{state | upload_id: nil, upload_index: 1, parts: [], completed: true}}
+    else
       error ->
         {error, state}
     end
