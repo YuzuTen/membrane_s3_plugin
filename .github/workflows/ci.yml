@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        otp: ["24.3.4.1", "25.0.3"]
-        elixir: ["1.13.4"]
+        otp: ["25.2.3", "26.0"]
+        elixir: ["1.14.5"]
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-elixir@v1
@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - run: mix deps.get
       - run: mix format --check-formatted
-        if: matrix.elixir == '1.13.4' # Only check formatting with the latest version
+        if: matrix.elixir == '1.14.5' # Only check formatting with the latest version
       - run: mix compile --warnings-as-errors
       - run: mix test
       - run: mix credo
