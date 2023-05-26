@@ -1,5 +1,9 @@
 # Membrane S3 Plugin
 
+![Membrane S3 Plugin CI Workflow](https://github.com/YuzuTen/membrane_s3_plugin/actions/workflows/ci.yml/badge.svg)
+[![Hex.pm](https://img.shields.io/hexpm/v/membrane_s3_plugin.svg)](https://hex.pm/packages/membrane_s3_plugin)
+[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_s3_plugin/)
+
 This plugin provides a Membrane Sink that writes to Amazon S3, or other object stores that use the AWS S3 API.
 It will eventually also provide a membrane Source that reads from S3, but my current project doesn't need it yet.
 
