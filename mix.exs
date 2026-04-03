@@ -65,8 +65,8 @@ defmodule Membrane.S3.Plugin.MixProject do
   defp deps do
     [
       {:ex_aws_s3, "~> 2.3"},
-      {:ex_doc, "~> 0.29.0"},
       {:membrane_core, "~> 1.2"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       # These are the default dependencies that ex_aws uses. They are not included in the :prod build
       # Because downstream clients may elect override them. Your application should include these in your own
       # mix.exs if you're happy with the defaults, or provide your own custom alternative.
@@ -77,7 +77,7 @@ defmodule Membrane.S3.Plugin.MixProject do
       {:membrane_file_plugin, "~> 0.17", only: [:dev, :test]},
       {:mox, "~> 1.0", only: [:test]},
       # These dependencies support static analysis of the codebase.
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
   end
