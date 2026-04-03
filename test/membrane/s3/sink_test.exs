@@ -112,9 +112,9 @@ defmodule Membrane.S3.SinkTest do
     ex_aws: ExAws.HappyPath
   }
 
-  test "handle_stopped_to_prepared" do
-    assert {:ok, %{upload_id: "aws_id_example"}} =
-             Sink.handle_stopped_to_prepared(%{}, @clean_state)
+  test "handle_setup" do
+    assert {[], %{upload_id: "aws_id_example"}} =
+             Sink.handle_setup(%{}, @clean_state)
   end
 
   @typical_input_queue_buffer_size 60_000
@@ -127,10 +127,10 @@ defmodule Membrane.S3.SinkTest do
                    |> Enum.chunk_every(@typical_input_queue_buffer_size)
                    |> Enum.map(&Enum.join/1)
 
-  describe "handle_write" do
+  describe "handle_buffer" do
     test "does not upload when the supplied buffer isn't big enough" do
-      assert {{:ok, [demand: {:input, 5_242_880}]}, _state} =
-               Sink.handle_write(
+      assert {[], _state} =
+               Sink.handle_buffer(
                  :input,
                  %Membrane.Buffer{payload: @short_payload},
                  # We don't actually use the context
@@ -146,8 +146,8 @@ defmodule Membrane.S3.SinkTest do
     end
 
     test "uploads when the supplied buffer finally meets the target" do
-      assert {{:ok, [demand: {:input, 5_242_880}]}, _state} =
-               Sink.handle_write(
+      assert {[], _state} =
+               Sink.handle_buffer(
                  :input,
                  %Membrane.Buffer{payload: @short_payload},
                  # We don't actually use the context

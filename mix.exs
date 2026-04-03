@@ -12,7 +12,6 @@ defmodule Membrane.S3.Plugin.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      deps: deps(),
 
       # hex
       description: "Membrane Multimedia Framework plugin for S3",
@@ -67,7 +66,7 @@ defmodule Membrane.S3.Plugin.MixProject do
     [
       {:ex_aws_s3, "~> 2.3"},
       {:ex_doc, "~> 0.29.0"},
-      {:membrane_core, "~> 0.10"},
+      {:membrane_core, "~> 1.2"},
       # These are the default dependencies that ex_aws uses. They are not included in the :prod build
       # Because downstream clients may elect override them. Your application should include these in your own
       # mix.exs if you're happy with the defaults, or provide your own custom alternative.
@@ -75,7 +74,7 @@ defmodule Membrane.S3.Plugin.MixProject do
       {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:sweet_xml, ">= 0.0.0", optional: true},
       # These plugins are used by tests. They're only needed in your project if they make sense for your application.
-      {:membrane_file_plugin, "~> 0.12.0", only: [:dev, :test]},
+      {:membrane_file_plugin, "~> 0.17", only: [:dev, :test]},
       {:mox, "~> 1.0", only: [:test]},
       # These dependencies support static analysis of the codebase.
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},

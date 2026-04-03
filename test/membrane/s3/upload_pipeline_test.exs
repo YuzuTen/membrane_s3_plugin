@@ -1,11 +1,10 @@
 defmodule Membrane.S3.UploadPipelineTest do
   use ExUnit.Case, async: false
 
+  import Membrane.ChildrenSpec
   import Membrane.Testing.Assertions
-  alias Membrane.Testing.Pipeline
+  alias Membrane.Testing
   import Mox
-
-  alias Membrane.ParentSpec
 
   require Membrane.Logger
 
@@ -15,17 +14,6 @@ defmodule Membrane.S3.UploadPipelineTest do
   setup :set_mox_global
 
   test "basic pipeline" do
-    children = [
-      source: %Membrane.File.Source{
-        location: "./test/sample_file.txt"
-      },
-      destination: %Membrane.S3.Sink{
-        bucket: "membrane-s3-plugin-test-bucket-us-east-1",
-        path: "example.txt",
-        ex_aws: ExAwsMock
-      }
-    ]
-
     ExAwsMock
     |> expect(
       :request,
@@ -45,10 +33,21 @@ defmodule Membrane.S3.UploadPipelineTest do
     end)
     |> expect(:request, fn %ExAws.Operation.S3{}, _ -> {:ok, %{headers: []}} end)
 
-    {:ok, pipeline} = Pipeline.start_link(links: ParentSpec.link_linear(children))
+    pipeline =
+      Testing.Pipeline.start_link_supervised!(
+        spec:
+          child(:source, %Membrane.File.Source{
+            location: "./test/sample_file.txt"
+          })
+          |> child(:destination, %Membrane.S3.Sink{
+            bucket: "membrane-s3-plugin-test-bucket-us-east-1",
+            path: "example.txt",
+            ex_aws: ExAwsMock
+          })
+      )
 
     assert_start_of_stream(pipeline, :destination, :input)
     assert_end_of_stream(pipeline, :destination)
-    Pipeline.terminate(pipeline, blocking?: true)
+    Testing.Pipeline.terminate(pipeline)
   end
 end
