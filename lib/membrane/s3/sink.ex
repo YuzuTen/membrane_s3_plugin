@@ -6,7 +6,7 @@ defmodule Membrane.S3.Sink do
 
   require Membrane.Logger
 
-  def_input_pad(:input, demand_unit: :bytes, caps: :any)
+  def_input_pad :input, accepted_format: _any
 
   def_options(
     path: [
@@ -41,7 +41,8 @@ defmodule Membrane.S3.Sink do
     ]
   )
 
-  def handle_init(%__MODULE__{
+  @impl true
+  def handle_init(_ctx, %__MODULE__{
         path: path,
         bucket: bucket,
         chunk_size: chunk_size,
@@ -50,7 +51,7 @@ defmodule Membrane.S3.Sink do
         ex_aws: ex_aws
       }) do
     {
-      :ok,
+      [],
       %{
         path: path,
         bucket: bucket,
@@ -69,7 +70,7 @@ defmodule Membrane.S3.Sink do
   end
 
   @impl true
-  def handle_stopped_to_prepared(
+  def handle_setup(
         _ctx,
         %{bucket: bucket, path: path, s3_opts: s3_opts, aws_config: aws_config, ex_aws: ex_aws} =
           state
@@ -85,35 +86,20 @@ defmodule Membrane.S3.Sink do
           }
         }
       } ->
-        {:ok, %{state | upload_id: upload_id}}
+        {[], %{state | upload_id: upload_id}}
 
       {:error, error} ->
-        {{:error, error}, state}
+        raise "Failed to initiate S3 multipart upload: #{inspect(error)}"
     end
   end
 
   @impl true
-  def handle_prepared_to_playing(
-        _ctx,
-        state
-      ) do
-    Membrane.Logger.info("Start Playing")
-
-    {{:ok, demand: {:input, state.chunk_size}}, state}
-  end
-
-  @impl true
-  def handle_playing_to_prepared(_ctx, state) do
+  def handle_end_of_stream(:input, _ctx, state) do
     complete_upload(state)
   end
 
   @impl true
-  def handle_end_of_stream(_pad, _ctx, state) do
-    complete_upload(state)
-  end
-
-  @impl true
-  def handle_write(
+  def handle_buffer(
         :input,
         %Membrane.Buffer{payload: payload},
         _ctx,
@@ -136,19 +122,13 @@ defmodule Membrane.S3.Sink do
                current_chunk_size: byte_size(rest)
            }) do
         {:ok, parts, count} ->
-          {
-            {:ok, demand: {:input, state.chunk_size}},
-            %{state | upload_index: count, parts: parts}
-          }
+          {[], %{state | upload_index: count, parts: parts}}
 
-        {:error, context} ->
-          {:error, context, state}
+        error ->
+          raise "S3 chunk upload failed: #{inspect(error)}"
       end
     else
-      {
-        {:ok, demand: {:input, chunk_size}},
-        %{state | current_chunk: current_chunk, current_chunk_size: current_chunk_size}
-      }
+      {[], %{state | current_chunk: current_chunk, current_chunk_size: current_chunk_size}}
     end
   end
 
@@ -198,7 +178,7 @@ defmodule Membrane.S3.Sink do
     )
   end
 
-  defp complete_upload(%{completed: true} = state), do: {:ok, state}
+  defp complete_upload(%{completed: true} = state), do: {[], state}
 
   defp complete_upload(
          %{
@@ -218,10 +198,10 @@ defmodule Membrane.S3.Sink do
            ExAws.S3.complete_multipart_upload(bucket, path, upload_id, Enum.reverse(parts)),
          {:ok, response} <- ex_aws.request(request, aws_config) do
       Membrane.Logger.info("Upload complete for #{length(parts)} parts. #{inspect(response)}")
-      {:ok, %{state | upload_id: nil, upload_index: 1, parts: [], completed: true}}
+      {[], %{state | upload_id: nil, upload_index: 1, parts: [], completed: true}}
     else
       error ->
-        {error, state}
+        raise "S3 upload completion failed: #{inspect(error)}"
     end
   end
 end
