@@ -113,8 +113,7 @@ defmodule Membrane.S3.SinkTest do
   }
 
   test "handle_setup" do
-    assert {[], %{upload_id: "aws_id_example"}} =
-             Sink.handle_setup(%{}, @clean_state)
+    assert {[], %{upload_id: "aws_id_example"}} = Sink.handle_setup(%{}, @clean_state)
   end
 
   @typical_input_queue_buffer_size 60_000

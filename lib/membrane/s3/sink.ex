@@ -6,7 +6,7 @@ defmodule Membrane.S3.Sink do
 
   require Membrane.Logger
 
-  def_input_pad :input, accepted_format: _any
+  def_input_pad(:input, accepted_format: _any)
 
   def_options(
     path: [
