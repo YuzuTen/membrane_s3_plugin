@@ -8,7 +8,7 @@ defmodule Membrane.S3.Plugin.MixProject do
     [
       app: :membrane_s3_plugin,
       version: @version,
-      elixir: "~> 1.13",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
