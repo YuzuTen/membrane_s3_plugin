@@ -1,7 +1,7 @@
 defmodule Membrane.S3.Plugin.MixProject do
   use Mix.Project
 
-  @version "0.1.2"
+  @version "0.2.0"
   @github_url "https://github.com/YuzuTen/membrane_s3_plugin"
 
   def project do
